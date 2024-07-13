@@ -46,8 +46,8 @@ def compute_conv_output_size(config: VaeConfig) -> Tuple[int, int, int]:
         The number of channels, height, and width after convolutions
     """
 
-    height = config.h_params.img_height
-    width = config.h_params.img_width
+    height = config.img_height
+    width = config.img_width
     channels = config.h_params.conv_out_dim
 
     for _ in range(config.h_params.n_conv_block):
@@ -93,3 +93,7 @@ def plot_generated_images(
     plt.title(title)
 
     plt.show()
+
+
+def train_step():
+    pass

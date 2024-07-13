@@ -4,7 +4,6 @@ import lightning as lit
 import torch
 import torch.nn.functional as F
 from torch import nn
-from transformers.utils import PushToHubMixin
 
 from .config import VaeConfig
 from .loss import loss_function
@@ -218,7 +217,7 @@ class VaeDecoder(nn.Module):
         return h
 
 
-class DenoisingVAE(nn.Module, PushToHubMixin):
+class DenoisingVAE(nn.Module):
     def __init__(self, config: VaeConfig) -> None:
         super().__init__()
 
@@ -273,10 +272,10 @@ class DenoisingVAE(nn.Module, PushToHubMixin):
         """
         z = torch.randn(
             (num_samples, self.config.h_params.latent_dim),
-            device=self.config.device,
+            device=self.config.optim.device,
         )
 
-        return torch.sigmoid(self.decode(z))
+        return torch.nn.functional.sigmoid(self.decode(z))
 
     def forward(self, x: torch.Tensor):
         mu, logvar = self.encode(x)
@@ -298,8 +297,8 @@ class LitDenoisingVAE(lit.LightningModule):
             (
                 1,
                 config.h_params.input_dim,
-                config.h_params.img_height,
-                config.h_params.img_width,
+                config.img_height,
+                config.img_width,
             )
         )
 
@@ -323,11 +322,11 @@ class LitDenoisingVAE(lit.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.config.lr)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.config.lr)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer,
-            T_max=self.config.t_max,
-            eta_min=self.config.eta_min,
+            T_max=self.config.optim.t_max,
+            eta_min=self.config.optim.eta_min,
         )
 
         return {
@@ -339,10 +338,3 @@ class LitDenoisingVAE(lit.LightningModule):
         n_samples = 4
         generated = self.model.generate(num_samples=n_samples)
         plot_generated_images(generated)
-
-    def on_train_end(self) -> None:
-        self.model.push_to_hub(
-            self.config.model_name,
-            private=True,
-            token=self.hf_token,
-        )

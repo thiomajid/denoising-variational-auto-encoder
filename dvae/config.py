@@ -9,14 +9,12 @@ class _VaeHparams:
 
     input_dim: int
     conv_out_dim: int
-    conv_out_dim_scale: 2
+    conv_out_dim_scale: int
     latent_dim: int
     kernel_size: int
     stride: int
     padding: int
     n_conv_block: int
-    img_width: int
-    img_height: int
 
 
 @dataclass(frozen=True)
@@ -32,21 +30,29 @@ class _VaeDataConfig:
 
 
 @dataclass(frozen=True)
+class _VaeOptimConfig:
+    device: str
+    accelerator: str
+    num_device: int
+    precision: str
+    epochs: int
+    lr: float
+    eta_min: float
+    t_max: int
+
+
+@dataclass(frozen=True)
 class VaeConfig:
     """
     Config class used to define VAE hyper-parameters and training data pipeline.
     """
 
     model_name: str
-    device: str
-    accelerator: str
-    num_device: int
-    precision: str
-    ckpt_dir: str
-    epochs: int
-    lr: float
-    eta_min: float
-    t_max: int
+    model_hf_repo: str
+    img_width: int
+    img_height: int
     activation_fn: str
+    ckpt_dir: str
+    optim: _VaeOptimConfig
     data: _VaeDataConfig
     h_params: _VaeHparams

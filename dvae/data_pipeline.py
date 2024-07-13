@@ -7,7 +7,7 @@ from datasets import load_dataset
 from PIL import Image
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
-from torchvision.transforms import v2
+from torchvision.datasets import FashionMNIST
 
 from .config import VaeConfig
 
@@ -32,18 +32,7 @@ class VaeDataset(Dataset):
         return len(self.images)
 
 
-def get_train_dataloader(config: VaeConfig, images: List[Image.Image]):
-    transform = v2.Compose(
-        [
-            v2.Resize(size=(config.h_params.img_height, config.h_params.img_width)),
-            v2.RandomRotation(degrees=45),
-            v2.RandomHorizontalFlip(),
-            v2.ColorJitter(hue=0.3),
-            v2.ToTensor(),
-        ]
-    )
-
-    data = VaeDataset(images=images, transform=transform, device=config.device)
+def get_train_dataloader(config: VaeConfig, data: Dataset):
     loader = DataLoader(
         data,
         batch_size=config.data.batch_size,
@@ -73,7 +62,31 @@ class VaeDataModule(lit.LightningDataModule):
             split="train",
         )
 
-        self._images = [elt["image"] for elt in dataset]
+        self._images: List[Image.Image] = [elt["image"] for elt in dataset]
 
     def train_dataloader(self) -> Any:
-        return get_train_dataloader(self.config, images=self._images)
+        # transform = v2.Compose(
+        #     [
+        #         v2.Resize(
+        #             size=(
+        #                 self.config.h_params.img_height,
+        #                 self.config.h_params.img_width,
+        #             )
+        #         ),
+        #         v2.RandomRotation(degrees=45),
+        #         v2.RandomHorizontalFlip(),
+        #         v2.ColorJitter(hue=0.3),
+        #         v2.ToTensor(),
+        #     ]
+        # )
+
+        # data = VaeDataset(
+        #     images=self.images,
+        #     transform=transform,
+        #     device=self.config.optim.device,
+        # )
+
+        return get_train_dataloader(
+            self.config,
+            data=FashionMNIST(root=".", download=True),
+        )
