@@ -273,7 +273,11 @@ class DenoisingVAE(nn.Module, PushToHubMixin):
         torch.Tensor
             A tensor containing logits that should be normalized using the sigmoid function
         """
-        z = torch.randn((num_samples, self.config.h_params.latent_dim))
+        z = torch.randn(
+            (num_samples, self.config.h_params.latent_dim),
+            device=self.config.device,
+        )
+
         return self.decode(z)
 
     def forward(self, x: torch.Tensor):

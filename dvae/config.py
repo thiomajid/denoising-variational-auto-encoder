@@ -39,6 +39,7 @@ class VaeConfig:
 
     model_name: str
     device: str
+    accelerator: str
     num_device: int
     precision: str
     ckpt_dir: str

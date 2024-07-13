@@ -34,7 +34,7 @@ def main(config: VaeConfig):
         ),
     ]
     trainer = lit.Trainer(
-        accelerator=config.device,
+        accelerator=config.accelerator,
         devices=config.num_device,
         max_epochs=config.epochs,
         precision=config.precision,

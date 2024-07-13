@@ -1,5 +1,6 @@
 model_name: thiomajid/dvae-v0
-device: gpu
+device: cuda
+accelerator: gpu
 num_device: -1
 precision: 16-mixed
 epochs: 100
