@@ -309,6 +309,7 @@ class LitDenoisingVAE(lit.LightningModule):
         return self.model.generate(num_samples)
 
     def training_step(self, batch: torch.Tensor):
+        batch = batch.to(self.device)
         reconstructed, mu, logvar = self.model(batch)
         loss = loss_function(
             sample=batch,

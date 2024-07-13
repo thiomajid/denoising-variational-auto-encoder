@@ -26,7 +26,7 @@ class VaeDataset(Dataset):
         img = self.images[index]
         transformed_img: torch.Tensor = self.transform(img)
 
-        return transformed_img.to(self.device)
+        return transformed_img
 
     def __len__(self):
         return len(self.images)
@@ -37,6 +37,7 @@ def get_train_dataloader(config: VaeConfig, data: Dataset):
         data,
         batch_size=config.data.batch_size,
         num_workers=config.data.num_workers,
+        persistent_workers=True,
         shuffle=True,
     )
 
