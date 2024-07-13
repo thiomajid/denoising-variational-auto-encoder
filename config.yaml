@@ -1,0 +1,16 @@
+model_name: thiomajid/dvae-v0
+epochs: 100
+lr: 2e-5
+activation_fn: gelu
+data:
+  dir: ./train/data
+  num_workers: 2
+  batch_size: 16
+h_params:
+  input_dim: 3
+  latent_dim: 16
+  kernel_size: 4
+  stride: 2
+  padding: 1
+  n_conv_block: 5
+  img_dim: 512
