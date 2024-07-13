@@ -294,6 +294,7 @@ class LitDenoisingVAE(lit.LightningModule):
         self.hf_token = hf_token
         self.model = DenoisingVAE(config)
 
+        self.automatic_optimization = False
         self.example_input_array = torch.randn(
             (
                 1,
@@ -320,7 +321,11 @@ class LitDenoisingVAE(lit.LightningModule):
 
         self.log("train_loss", loss, prog_bar=True, logger=True)
 
-        return loss
+        self.manual_backward(loss)
+        optim = self.optimizers()
+        optim.step()
+        scheduler = self.lr_schedulers()
+        scheduler.step()
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.config.lr)
