@@ -81,7 +81,7 @@ class VaeDataModule(lit.LightningDataModule):
         )
 
         data = VaeDataset(
-            images=self.images,
+            images=self._images,
             transform=transform,
             device=self.config.optim.device,
         )
