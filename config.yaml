@@ -2,7 +2,7 @@ model_name: dvae-v0
 model_hf_repo: thiomajid/dvae-v0
 img_width: 512
 img_height: 512
-activation_fn: relu
+activation_fn: gelu
 ckpt_dir: dvae-v0-artifacts
 
 optim:
@@ -23,7 +23,7 @@ data:
 
 h_params:
   input_dim: 3
-  conv_out_dim: 32
+  conv_out_dim: 64
   conv_out_dim_scale: 2
   latent_dim: 512
   kernel_size: 4
