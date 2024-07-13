@@ -74,9 +74,6 @@ class VaeDataModule(lit.LightningDataModule):
                         self.config.img_width,
                     )
                 ),
-                v2.RandomRotation(degrees=45),
-                v2.RandomHorizontalFlip(),
-                v2.ColorJitter(hue=0.3),
                 v2.ToTensor(),
             ]
         )

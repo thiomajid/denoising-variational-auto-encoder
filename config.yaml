@@ -2,7 +2,7 @@ model_name: dvae-v0
 model_hf_repo: thiomajid/dvae-v0
 img_width: 512
 img_height: 512
-activation_fn: gelu
+activation_fn: relu
 ckpt_dir: dvae-v0-artifacts
 
 optim:
@@ -10,10 +10,10 @@ optim:
   accelerator: gpu
   num_device: -1
   precision: 16-mixed
-  epochs: 100
-  lr: 1e-3
+  epochs: 200
+  lr: 1e-2
   eta_min: 1e-6
-  t_max: 25
+  t_max: 50
 
 data:
   dir: ./train-data/
@@ -29,4 +29,4 @@ h_params:
   kernel_size: 4
   stride: 2
   padding: 1
-  n_conv_block: 5
+  n_conv_block: 6
