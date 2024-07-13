@@ -32,7 +32,7 @@ class VaeDataset(Dataset):
         return len(self.images)
 
 
-def get_train_dataloader(config: VaeConfig, images: List[Image.Image], device: str):
+def get_train_dataloader(config: VaeConfig, images: List[Image.Image]):
     transform = v2.Compose(
         [
             v2.Resize(size=(config.h_params.img_height, config.h_params.img_width)),
@@ -43,7 +43,7 @@ def get_train_dataloader(config: VaeConfig, images: List[Image.Image], device: s
         ]
     )
 
-    data = VaeDataset(images=images, transform=transform, device=device)
+    data = VaeDataset(images=images, transform=transform, device=config.device)
     loader = DataLoader(
         data,
         batch_size=config.data.batch_size,
@@ -55,12 +55,11 @@ def get_train_dataloader(config: VaeConfig, images: List[Image.Image], device: s
 
 
 class VaeDataModule(lit.LightningDataModule):
-    def __init__(self, config: VaeConfig, hf_token: str, device: str) -> None:
+    def __init__(self, config: VaeConfig, hf_token: str) -> None:
         super().__init__()
 
         self.config = config
         self.hf_token = hf_token
-        self.device = device
 
     def prepare_data(self) -> None:
         os.makedirs(self.config.data.dir, exist_ok=True)
