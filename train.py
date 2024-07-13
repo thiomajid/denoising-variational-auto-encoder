@@ -43,8 +43,6 @@ def main(config: VaeConfig):
         enable_checkpointing=True,
         enable_model_summary=True,
         enable_progress_bar=True,
-        log_every_n_steps=10,
-        accumulate_grad_batches=4,
     )
 
 

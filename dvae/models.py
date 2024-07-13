@@ -261,8 +261,6 @@ class DenoisingVAE(nn.Module, PushToHubMixin):
         """
         Passes gaussian noise through the decoder to generate num_samples images
 
-
-
         Parameters
         ----------
         num_samples : int

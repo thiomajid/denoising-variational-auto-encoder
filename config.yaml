@@ -5,8 +5,8 @@ num_device: -1
 precision: 16-mixed
 epochs: 100
 lr: 1e-3
-eta_min: 1e-8
-t_max: 100
+eta_min: 1e-6
+t_max: 25
 activation_fn: gelu
 ckpt_dir: dvae-v0-artifacts
 data:
@@ -18,7 +18,7 @@ h_params:
   input_dim: 3
   conv_out_dim: 32
   conv_out_dim_scale: 2
-  latent_dim: 128
+  latent_dim: 256
   kernel_size: 4
   stride: 2
   padding: 1
