@@ -28,6 +28,7 @@ class _VaeDataConfig:
     dir: str
     num_workers: int
     batch_size: int
+    hf_repo: str
 
 
 @dataclass(frozen=True)
@@ -37,8 +38,14 @@ class VaeConfig:
     """
 
     model_name: str
+    device: str
+    num_device: int
+    precision: str
+    ckpt_dir: str
     epochs: int
     lr: float
+    eta_min: float
+    t_max: int
     activation_fn: str
     data: _VaeDataConfig
     h_params: _VaeHparams

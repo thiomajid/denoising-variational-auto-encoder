@@ -1,3 +1,5 @@
 outputs/
+train-data/
 
 **.pyc
+**.ipynb

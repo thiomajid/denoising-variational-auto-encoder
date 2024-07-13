@@ -1,11 +1,18 @@
 from typing import Callable, Tuple
 
+import lightning as lit
 import torch
 import torch.nn.functional as F
 from torch import nn
+from transformers.utils import PushToHubMixin
 
 from .config import VaeConfig
-from .utils import compute_conv_output_size, compute_last_conv_out_dim
+from .loss import loss_function
+from .utils import (
+    compute_conv_output_size,
+    compute_last_conv_out_dim,
+    create_image_grid,
+)
 
 _ActivationFn = Callable[[torch.Tensor], torch.Tensor]
 
@@ -211,7 +218,7 @@ class VaeDecoder(nn.Module):
         return torch.sigmoid(h)
 
 
-class DenoisingVAE(nn.Module):
+class DenoisingVAE(nn.Module, PushToHubMixin):
     def __init__(self, config: VaeConfig) -> None:
         super().__init__()
 
@@ -260,3 +267,66 @@ class DenoisingVAE(nn.Module):
         reconstructed = self.decode(z)
 
         return reconstructed, mu, logvar
+
+
+class LitDenoisingVAE(lit.LightningModule):
+    def __init__(self, config: VaeConfig, hf_token: str) -> None:
+        super().__init__()
+
+        self.config = config
+        self.hf_token = hf_token
+        self.model = DenoisingVAE(config)
+
+        self.example_input_array = torch.randn(
+            (
+                1,
+                config.h_params.input_dim,
+                config.h_params.img_height,
+                config.h_params.img_width,
+            )
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Any:
+        return self.model(x)
+
+    def generate(self, num_samples: int):
+        return self.model.generate(num_samples)
+
+    def training_step(self, batch: torch.Tensor):
+        reconstructed, mu, logvar = self.model(batch)
+        loss = loss_function(
+            sample=batch,
+            reconstructed=reconstructed,
+            mu=mu,
+            logvar=logvar,
+        )
+
+        self.log("train_loss", loss, prog_bar=True, logger=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.config.lr)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=self.config.t_max,
+            eta_min=self.config.eta_min,
+        )
+
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": scheduler,
+        }
+
+    def on_train_epoch_end(self) -> None:
+        n_samples = 4
+        generated = self.model.generate(num_samples=n_samples)
+        grid = create_image_grid(generated)
+        self.logger.experiment.add_image("generated_images", grid, self.global_step)
+
+    def on_train_end(self) -> None:
+        self.model.push_to_hub(
+            self.config.model_name,
+            private=True,
+            token=self.hf_token,
+        )

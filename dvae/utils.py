@@ -1,6 +1,10 @@
 import math
 from typing import Tuple
 
+import matplotlib.pyplot as plt
+import torch
+from torchvision.utils import make_grid
+
 from .config import VaeConfig
 
 
@@ -58,3 +62,34 @@ def compute_conv_output_size(config: VaeConfig) -> Tuple[int, int, int]:
         channels *= config.h_params.conv_out_dim_scale
 
     return channels, height, width
+
+
+def create_image_grid(images: torch.Tensor):
+    batch_size = images.size(0)
+    nrow = int(math.sqrt(batch_size))
+    if nrow**2 < batch_size:
+        nrow += 1
+
+    grid = make_grid(images, nrow=nrow)
+
+    # torch => CxHxW
+    # numpy => HxWxC
+    grid_np = grid.cpu().permute(1, 2, 0).numpy()
+
+    return grid_np
+
+
+def plot_generated_images(
+    images: torch.Tensor,
+    figsize: Tuple[float, float] = (10, 8),
+    title: str | None = None,
+):
+    grid = create_image_grid(images)
+    plt.figure(figsize=figsize)
+    plt.imshow(grid)
+    plt.axis("off")
+
+    title = title if title is not None else "Generated images"
+    plt.title(title)
+
+    plt.show()
