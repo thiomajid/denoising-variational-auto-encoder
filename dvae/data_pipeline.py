@@ -2,6 +2,7 @@ import os
 from typing import Any, Callable, List
 
 import lightning as lit
+import torch
 from datasets import load_dataset
 from PIL import Image
 from torch.utils.data.dataloader import DataLoader
@@ -12,20 +13,26 @@ from .config import VaeConfig
 
 
 class VaeDataset(Dataset):
-    def __init__(self, images: List[Image.Image], transform: Callable) -> None:
+    def __init__(
+        self, images: List[Image.Image], device: str, transform: Callable
+    ) -> None:
         super().__init__()
 
         self.images = images
         self.transform = transform
+        self.device = device
 
     def __getitem__(self, index) -> Any:
         img = self.images[index]
-        transformed_img = self.transform(img)
+        transformed_img: torch.Tensor = self.transform(img)
 
-        return transformed_img
+        return transformed_img.to(self.device)
+
+    def __len__(self):
+        return len(self.images)
 
 
-def get_train_dataloader(config: VaeConfig, images: List[Image.Image]):
+def get_train_dataloader(config: VaeConfig, images: List[Image.Image], device: str):
     transform = v2.Compose(
         [
             v2.Resize(size=(config.h_params.img_height, config.h_params.img_width)),
@@ -36,7 +43,7 @@ def get_train_dataloader(config: VaeConfig, images: List[Image.Image]):
         ]
     )
 
-    data = VaeDataset(images=images, transform=transform)
+    data = VaeDataset(images=images, transform=transform, device=device)
     loader = DataLoader(
         data,
         batch_size=config.data.batch_size,
@@ -48,11 +55,12 @@ def get_train_dataloader(config: VaeConfig, images: List[Image.Image]):
 
 
 class VaeDataModule(lit.LightningDataModule):
-    def __init__(self, config: VaeConfig, hf_token: str) -> None:
+    def __init__(self, config: VaeConfig, hf_token: str, device: str) -> None:
         super().__init__()
 
         self.config = config
         self.hf_token = hf_token
+        self.device = device
 
     def prepare_data(self) -> None:
         os.makedirs(self.config.data.dir, exist_ok=True)
@@ -66,7 +74,7 @@ class VaeDataModule(lit.LightningDataModule):
             split="train",
         )
 
-        self._images = [elt["images"] for elt in dataset]
+        self._images = [elt["image"] for elt in dataset]
 
     def train_dataloader(self) -> Any:
         return get_train_dataloader(self.config, images=self._images)

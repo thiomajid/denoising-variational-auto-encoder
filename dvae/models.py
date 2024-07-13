@@ -215,7 +215,7 @@ class VaeDecoder(nn.Module):
         for block in self.conv_transpose_blocks:
             h = block(h)
 
-        return torch.sigmoid(h)
+        return h
 
 
 class DenoisingVAE(nn.Module, PushToHubMixin):
@@ -258,6 +258,21 @@ class DenoisingVAE(nn.Module, PushToHubMixin):
 
     @torch.no_grad()
     def generate(self, num_samples: int) -> torch.Tensor:
+        """
+        Passes gaussian noise through the decoder to generate num_samples images
+
+
+
+        Parameters
+        ----------
+        num_samples : int
+            The number of images to generate
+
+        Returns
+        -------
+        torch.Tensor
+            A tensor containing logits that should be normalized using the sigmoid function
+        """
         z = torch.randn((num_samples, self.config.h_params.latent_dim))
         return self.decode(z)
 

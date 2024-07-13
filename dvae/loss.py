@@ -7,7 +7,7 @@ def loss_function(
     mu: torch.Tensor,
     logvar: torch.Tensor,
 ):
-    bce_loss = torch.nn.functional.binary_cross_entropy(
+    bce_loss = torch.nn.functional.binary_cross_entropy_with_logits(
         reconstructed,
         sample,
         reduction="sum",
