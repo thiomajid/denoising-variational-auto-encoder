@@ -1,4 +1,3 @@
-import math
 from typing import Callable, Tuple
 
 import torch
@@ -161,17 +160,15 @@ class VaeDecoder(nn.Module):
 
     def __init_conv_transpose_blocks(self):
         out_dim_scale = self.config.h_params.conv_out_dim_scale
-        last_conv_out_dim = self.config.h_params.conv_out_dim * math.pow(
-            out_dim_scale,
-            self.config.h_params.n_conv_block - 1,
-        )
+        last_conv_out_dim = compute_last_conv_out_dim(self.config)
 
         modules = nn.ModuleList()
         in_channels = last_conv_out_dim
         out_channels = in_channels // out_dim_scale
         n_blocks = self.config.h_params.n_conv_block
 
-        for _ in range(n_blocks):
+        # up to n_blocks - 1 because the last conv layer must produce 3 channels
+        for _ in range(n_blocks - 1):
             block = ConvTransposeBlock(
                 input_dim=in_channels,
                 out_dim=out_channels,
@@ -184,6 +181,18 @@ class VaeDecoder(nn.Module):
             modules.append(block)
             in_channels = out_channels
             out_channels = in_channels // out_dim_scale
+
+        # registering the last conv transpose module
+        modules.append(
+            ConvTransposeBlock(
+                input_dim=in_channels,
+                out_dim=self.config.h_params.input_dim,
+                kernel_size=self.config.h_params.kernel_size,
+                padding=self.config.h_params.padding,
+                stride=self.config.h_params.stride,
+                activation=self.activation,
+            )
+        )
 
         return modules
 

@@ -4,9 +4,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class _VaeHparams:
     """
-    _summary_
-
-
+    Hyper-parameters used to define the model architecture
     """
 
     input_dim: int
@@ -24,9 +22,7 @@ class _VaeHparams:
 @dataclass(frozen=True)
 class _VaeDataConfig:
     """
-    _summary_
-
-
+    Config class for everything related to the training data pipeline.
     """
 
     dir: str
@@ -37,9 +33,7 @@ class _VaeDataConfig:
 @dataclass(frozen=True)
 class VaeConfig:
     """
-    _summary_
-
-
+    Config class used to define VAE hyper-parameters and training data pipeline.
     """
 
     model_name: str
