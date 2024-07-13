@@ -8,9 +8,12 @@ data:
   batch_size: 16
 h_params:
   input_dim: 3
+  conv_out_dim: 32
+  conv_out_dim_scale: 2
   latent_dim: 16
   kernel_size: 4
   stride: 2
   padding: 1
   n_conv_block: 5
-  img_dim: 512
+  img_width: 512
+  img_height: 512

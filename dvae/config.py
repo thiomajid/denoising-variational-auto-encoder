@@ -1,7 +1,4 @@
 from dataclasses import dataclass
-from typing import Literal
-
-_ActivationFn = Literal["gelu", "relu", "leaky_relu", "silu"]
 
 
 @dataclass(frozen=True)
@@ -13,12 +10,15 @@ class _VaeHparams:
     """
 
     input_dim: int
+    conv_out_dim: int
+    conv_out_dim_scale: 2
     latent_dim: int
     kernel_size: int
     stride: int
     padding: int
     n_conv_block: int
-    img_dim: int
+    img_width: int
+    img_height: int
 
 
 @dataclass(frozen=True)
@@ -45,6 +45,6 @@ class VaeConfig:
     model_name: str
     epochs: int
     lr: float
-    activation_fn: _ActivationFn
+    activation_fn: str
     data: _VaeDataConfig
     h_params: _VaeHparams
