@@ -11,7 +11,7 @@ from .loss import loss_function
 from .utils import (
     compute_conv_output_size,
     compute_last_conv_out_dim,
-    create_image_grid,
+    plot_generated_images,
 )
 
 _ActivationFn = Callable[[torch.Tensor], torch.Tensor]
@@ -340,8 +340,7 @@ class LitDenoisingVAE(lit.LightningModule):
     def on_train_epoch_end(self) -> None:
         n_samples = 4
         generated = self.model.generate(num_samples=n_samples)
-        grid = create_image_grid(generated)
-        self.logger.experiment.add_image("generated_images", grid, self.global_step)
+        plot_generated_images(generated)
 
     def on_train_end(self) -> None:
         self.model.push_to_hub(
