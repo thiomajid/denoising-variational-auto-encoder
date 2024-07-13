@@ -1,32 +1,31 @@
 import os
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, List
 
 import lightning as lit
 from datasets import load_dataset
+from PIL import Image
 from torch.utils.data.dataloader import DataLoader
-from torchvision.datasets import ImageFolder
-from torchvision.datasets.folder import default_loader
+from torch.utils.data.dataset import Dataset
 from torchvision.transforms import v2
 
 from .config import VaeConfig
 
 
-class VaeDataset(ImageFolder):
-    def __init__(
-        self,
-        root: str,
-        transform: Callable[..., Any] | None = None,
-        target_transform: Callable[..., Any] | None = None,
-        loader: Callable[[str], Any] = default_loader,
-        is_valid_file: Callable[[str], bool] | None = None,
-    ):
-        super().__init__(root, transform, target_transform, loader, is_valid_file)
+class VaeDataset(Dataset):
+    def __init__(self, images: List[Image.Image], transform: Callable) -> None:
+        super().__init__()
 
-    def __getitem__(self, index: int) -> Tuple[Any, Any]:
-        return super().__getitem__(index)
+        self.images = images
+        self.transform = transform
+
+    def __getitem__(self, index) -> Any:
+        img = self.images[index]
+        transformed_img = self.transform(img)
+
+        return transformed_img
 
 
-def get_train_dataloader(config: VaeConfig):
+def get_train_dataloader(config: VaeConfig, images: List[Image.Image]):
     transform = v2.Compose(
         [
             v2.Resize(size=(config.h_params.img_height, config.h_params.img_width)),
@@ -37,7 +36,7 @@ def get_train_dataloader(config: VaeConfig):
         ]
     )
 
-    data = VaeDataset(root=config.data.dir, transform=transform)
+    data = VaeDataset(images=images, transform=transform)
     loader = DataLoader(
         data,
         batch_size=config.data.batch_size,
@@ -56,14 +55,18 @@ class VaeDataModule(lit.LightningDataModule):
         self.hf_token = hf_token
 
     def prepare_data(self) -> None:
-        load_dataset(self.config.data.hf_repo, token=self.hf_token)
+        os.makedirs(self.config.data.dir, exist_ok=True)
+        data = load_dataset(self.config.data.hf_repo, token=self.hf_token)
+        data.save_to_disk(self.config.data.dir)
 
     def setup(self, stage: str) -> None:
-        data = load_dataset(self.config.data.hf_repo, token=self.hf_token)
+        dataset = load_dataset(
+            self.config.data.hf_repo,
+            token=self.hf_token,
+            split="train",
+        )
 
-        if stage == "train":
-            os.makedirs(self.config.data.dir, exist_ok=True)
-            data["train"].save_to_disk(self.config.data.dir)
+        self._images = [elt["images"] for elt in dataset]
 
     def train_dataloader(self) -> Any:
-        return get_train_dataloader(self.config)
+        return get_train_dataloader(self.config, images=self._images)
