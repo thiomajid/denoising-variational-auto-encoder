@@ -69,8 +69,8 @@ class VaeDataModule(lit.LightningDataModule):
             [
                 v2.Resize(
                     size=(
-                        self.config.h_params.img_height,
-                        self.config.h_params.img_width,
+                        self.config.img_height,
+                        self.config.img_width,
                     )
                 ),
                 v2.RandomRotation(degrees=45),
