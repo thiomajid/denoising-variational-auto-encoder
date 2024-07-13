@@ -278,7 +278,7 @@ class DenoisingVAE(nn.Module, PushToHubMixin):
             device=self.config.device,
         )
 
-        return self.decode(z)
+        return torch.sigmoid(self.decode(z))
 
     def forward(self, x: torch.Tensor):
         mu, logvar = self.encode(x)
