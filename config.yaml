@@ -29,4 +29,4 @@ h_params:
   kernel_size: 4
   stride: 2
   padding: 1
-  n_conv_block: 6
+  n_conv_block: 5
