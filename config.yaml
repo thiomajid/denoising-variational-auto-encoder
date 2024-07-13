@@ -23,7 +23,7 @@ data:
 
 h_params:
   input_dim: 3
-  conv_out_dim: 64
+  conv_out_dim: 32
   conv_out_dim_scale: 2
   latent_dim: 512
   kernel_size: 4
