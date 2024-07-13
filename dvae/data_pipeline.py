@@ -7,7 +7,7 @@ from datasets import load_dataset
 from PIL import Image
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
-from torchvision.datasets import FashionMNIST
+from torchvision.transforms import v2
 
 from .config import VaeConfig
 
@@ -65,28 +65,25 @@ class VaeDataModule(lit.LightningDataModule):
         self._images: List[Image.Image] = [elt["image"] for elt in dataset]
 
     def train_dataloader(self) -> Any:
-        # transform = v2.Compose(
-        #     [
-        #         v2.Resize(
-        #             size=(
-        #                 self.config.h_params.img_height,
-        #                 self.config.h_params.img_width,
-        #             )
-        #         ),
-        #         v2.RandomRotation(degrees=45),
-        #         v2.RandomHorizontalFlip(),
-        #         v2.ColorJitter(hue=0.3),
-        #         v2.ToTensor(),
-        #     ]
-        # )
-
-        # data = VaeDataset(
-        #     images=self.images,
-        #     transform=transform,
-        #     device=self.config.optim.device,
-        # )
-
-        return get_train_dataloader(
-            self.config,
-            data=FashionMNIST(root=".", download=True),
+        transform = v2.Compose(
+            [
+                v2.Resize(
+                    size=(
+                        self.config.h_params.img_height,
+                        self.config.h_params.img_width,
+                    )
+                ),
+                v2.RandomRotation(degrees=45),
+                v2.RandomHorizontalFlip(),
+                v2.ColorJitter(hue=0.3),
+                v2.ToTensor(),
+            ]
         )
+
+        data = VaeDataset(
+            images=self.images,
+            transform=transform,
+            device=self.config.optim.device,
+        )
+
+        return get_train_dataloader(self.config, data=data)
