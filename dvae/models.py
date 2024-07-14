@@ -30,9 +30,9 @@ class ConvBlock(nn.Module):
         )
 
         # Xavier initialization
-        # torch.nn.init.xavier_uniform_(self.conv.weight)
-        # if self.conv.bias is not None:
-        #     torch.nn.init.zeros_(self.conv.bias)
+        torch.nn.init.xavier_uniform_(self.conv.weight)
+        if self.conv.bias is not None:
+            torch.nn.init.zeros_(self.conv.bias)
 
         self.norm = nn.BatchNorm2d(out_dim)
 
@@ -59,9 +59,9 @@ class ConvTransposeBlock(nn.Module):
             stride=config.h_params.stride,
         )
         # Xavier initialization
-        # torch.nn.init.xavier_uniform_(self.conv.weight)
-        # if self.conv.bias is not None:
-        #     torch.nn.init.zeros_(self.conv.bias)
+        torch.nn.init.xavier_uniform_(self.conv.weight)
+        if self.conv.bias is not None:
+            torch.nn.init.zeros_(self.conv.bias)
 
         self.norm = nn.BatchNorm2d(out_dim)
 
