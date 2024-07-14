@@ -255,6 +255,13 @@ class DenoisingVAE(nn.Module):
 
         return mu + eps * std
 
+    def forward(self, x: torch.Tensor):
+        mu, logvar = self.encode(x)
+        z = self.reparametrize(mu, logvar)
+        reconstructed = self.decode(z)
+
+        return reconstructed, mu, logvar
+
     @torch.no_grad()
     def generate(self, num_samples: int) -> torch.Tensor:
         """
@@ -276,13 +283,6 @@ class DenoisingVAE(nn.Module):
         )
 
         return torch.nn.functional.sigmoid(self.decode(z))
-
-    def forward(self, x: torch.Tensor):
-        mu, logvar = self.encode(x)
-        z = self.reparametrize(mu, logvar)
-        reconstructed = self.decode(z)
-
-        return reconstructed, mu, logvar
 
 
 class LitDenoisingVAE(lit.LightningModule):
