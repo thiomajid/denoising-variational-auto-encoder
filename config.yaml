@@ -31,6 +31,6 @@ h_params:
   latent_dim: 256
   kernel_size: 8
   stride: 2
-  padding: 3
+  padding: 1
   n_conv_block: 5
   normalize: true
