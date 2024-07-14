@@ -219,7 +219,7 @@ class VaeDecoder(nn.Module):
         ):
             h = self.upsample(h)
 
-        return torch.nn.functional.sigmoid(h)
+        return h
 
 
 class DenoisingVAE(nn.Module):
