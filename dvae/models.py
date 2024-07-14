@@ -163,6 +163,7 @@ class VaeDecoder(nn.Module):
         )
 
         self.conv_transpose_blocks = self.__init_conv_transpose_blocks()
+        self.upsample = nn.Upsample(size=(config.img_height, config.img_width))
 
     def __init_conv_transpose_blocks(self):
         out_dim_scale = self.config.h_params.conv_out_dim_scale
@@ -213,6 +214,12 @@ class VaeDecoder(nn.Module):
 
         for block in self.conv_transpose_blocks:
             h = block(h)
+
+        if (
+            h.shape[-2] != self.config.img_width
+            and h.shape[-1] != self.config.img_height
+        ):
+            h = self.upsample(h)
 
         return h
 
@@ -318,7 +325,7 @@ class LitDenoisingVAE(lit.LightningModule):
             logvar=logvar,
         )
 
-        self.log("train_loss", loss, prog_bar=True, logger=True)
+        self.log("train_loss", loss, prog_bar=True)
 
         return loss
 
