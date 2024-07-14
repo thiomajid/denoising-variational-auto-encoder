@@ -29,7 +29,7 @@ h_params:
   conv_out_dim: 32
   conv_out_dim_scale: 2
   latent_dim: 512
-  kernel_size: 8
+  kernel_size: 4
   stride: 2
   padding: 1
   n_conv_block: 5
