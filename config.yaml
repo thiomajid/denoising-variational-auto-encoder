@@ -1,7 +1,7 @@
 model_name: dvae-v0
 model_hf_repo: thiomajid/dvae-v0
-img_width: 750
-img_height: 750
+img_width: 512
+img_height: 512
 activation_fn: gelu
 ckpt_dir: dvae-v0-artifacts
 
@@ -31,6 +31,6 @@ h_params:
   latent_dim: 256
   kernel_size: 8
   stride: 2
-  padding: 1
+  padding: 3
   n_conv_block: 5
   normalize: true
