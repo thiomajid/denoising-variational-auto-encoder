@@ -3,6 +3,7 @@ from typing import Tuple
 
 import matplotlib.pyplot as plt
 import torch
+from torch import nn
 from torchvision.utils import make_grid
 
 from .config import VaeConfig
@@ -93,6 +94,18 @@ def plot_generated_images(
     plt.title(title)
 
     plt.show()
+
+
+def get_activation_function(fn_name: str):
+    match fn_name:
+        case "relu":
+            return nn.ReLU()
+        case "gelu":
+            return nn.GELU()
+        case "elu":
+            return nn.ELU()
+        case _:
+            raise ValueError(f"{fn_name} is not a supported activation function")
 
 
 def train_step():

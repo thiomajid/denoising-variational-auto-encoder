@@ -1,8 +1,7 @@
-from typing import Callable, Tuple
+from typing import Tuple
 
 import lightning as lit
 import torch
-import torch.nn.functional as F
 from torch import nn
 
 from .config import VaeConfig
@@ -10,31 +9,24 @@ from .loss import loss_function
 from .utils import (
     compute_conv_output_size,
     compute_last_conv_out_dim,
+    get_activation_function,
     plot_generated_images,
 )
 
-_ActivationFn = Callable[[torch.Tensor], torch.Tensor]
-
 
 class ConvBlock(nn.Module):
-    def __init__(
-        self,
-        input_dim: int,
-        out_dim: int,
-        kernel_size: int,
-        padding: int,
-        stride: int,
-        activation: _ActivationFn,
-    ) -> None:
+    def __init__(self, input_dim: int, out_dim: int, config: VaeConfig) -> None:
         super().__init__()
 
-        self.activation = activation
+        self.config = config
+        self.activation = get_activation_function(config.activation_fn)
+
         self.conv = nn.Conv2d(
             in_channels=input_dim,
             out_channels=out_dim,
-            kernel_size=kernel_size,
-            padding=padding,
-            stride=stride,
+            kernel_size=config.h_params.kernel_size,
+            padding=config.h_params.padding,
+            stride=config.h_params.stride,
         )
 
         # Xavier initialization
@@ -45,29 +37,26 @@ class ConvBlock(nn.Module):
         self.norm = nn.BatchNorm2d(out_dim)
 
     def forward(self, hidden_state: torch.Tensor):
-        h = self.activation(self.conv(hidden_state))
-        return self.norm(h)
+        h = self.conv(hidden_state)
+        if self.config.h_params.normalize:
+            h = self.norm(h)
+
+        return self.activation(h)
 
 
 class ConvTransposeBlock(nn.Module):
-    def __init__(
-        self,
-        input_dim: int,
-        out_dim: int,
-        kernel_size: int,
-        padding: int,
-        stride: int,
-        activation: _ActivationFn,
-    ) -> None:
+    def __init__(self, input_dim: int, out_dim: int, config: VaeConfig) -> None:
         super().__init__()
 
-        self.activation = activation
+        self.config = config
+        self.activation = get_activation_function(config.activation_fn)
+
         self.conv = nn.ConvTranspose2d(
             in_channels=input_dim,
             out_channels=out_dim,
-            kernel_size=kernel_size,
-            padding=padding,
-            stride=stride,
+            kernel_size=config.h_params.kernel_size,
+            padding=config.h_params.padding,
+            stride=config.h_params.stride,
         )
         # Xavier initialization
         # torch.nn.init.xavier_uniform_(self.conv.weight)
@@ -77,16 +66,19 @@ class ConvTransposeBlock(nn.Module):
         self.norm = nn.BatchNorm2d(out_dim)
 
     def forward(self, hidden_state: torch.Tensor):
-        h = self.activation(self.conv(hidden_state))
-        return self.norm(h)
+        h = self.conv(hidden_state)
+        if self.config.h_params.normalize:
+            h = self.norm(h)
+
+        return self.activation(h)
 
 
 class VaeEncoder(nn.Module):
-    def __init__(self, config: VaeConfig, activation: _ActivationFn) -> None:
+    def __init__(self, config: VaeConfig) -> None:
         super().__init__()
 
-        self.activation = activation
         self.config = config
+        self.activation = get_activation_function(config.activation_fn)
 
         self.conv_blocks = self.__init_conv_blocks()
 
@@ -129,10 +121,7 @@ class VaeEncoder(nn.Module):
             block = ConvBlock(
                 input_dim=in_channels,
                 out_dim=out_channels,
-                kernel_size=self.config.h_params.kernel_size,
-                padding=self.config.h_params.padding,
-                stride=self.config.h_params.stride,
-                activation=self.activation,
+                config=self.config,
             )
 
             conv_modules.append(block)
@@ -156,11 +145,11 @@ class VaeEncoder(nn.Module):
 
 
 class VaeDecoder(nn.Module):
-    def __init__(self, config: VaeConfig, activation: _ActivationFn) -> None:
+    def __init__(self, config: VaeConfig) -> None:
         super().__init__()
 
         self.config = config
-        self.activation = activation
+        self.activation = get_activation_function(config.activation_fn)
 
         out_dim_scale = self.config.h_params.conv_out_dim_scale
         self._last_conv_out_dim = compute_last_conv_out_dim(self.config)
@@ -194,10 +183,7 @@ class VaeDecoder(nn.Module):
             block = ConvTransposeBlock(
                 input_dim=in_channels,
                 out_dim=out_channels,
-                kernel_size=self.config.h_params.kernel_size,
-                padding=self.config.h_params.padding,
-                stride=self.config.h_params.stride,
-                activation=self.activation,
+                config=self.config,
             )
 
             modules.append(block)
@@ -209,10 +195,7 @@ class VaeDecoder(nn.Module):
             ConvTransposeBlock(
                 input_dim=in_channels,
                 out_dim=self.config.h_params.input_dim,
-                kernel_size=self.config.h_params.kernel_size,
-                padding=self.config.h_params.padding,
-                stride=self.config.h_params.stride,
-                activation=self.activation,
+                config=self.config,
             )
         )
 
@@ -243,26 +226,9 @@ class DenoisingVAE(nn.Module):
     def __init__(self, config: VaeConfig) -> None:
         super().__init__()
 
-        activation = None
-        match config.activation_fn:
-            case "gelu":
-                activation = F.gelu
-            case "leaky_relu":
-                activation = F.leaky_relu
-            case "silu":
-                activation = F.silu
-            case "relu":
-                activation = F.relu
-            case _:
-                raise ValueError(
-                    f"{config.activation_fn} is not a known activation function"
-                )
-
-        self.activation = activation
         self.config = config
-
-        self.encoder = VaeEncoder(config, self.activation)
-        self.decoder = VaeDecoder(config, self.activation)
+        self.encoder = VaeEncoder(config)
+        self.decoder = VaeDecoder(config)
 
     def encode(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         mu, logvar = self.encoder(x)

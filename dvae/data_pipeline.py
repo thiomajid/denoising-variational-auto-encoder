@@ -7,6 +7,7 @@ from datasets import load_dataset
 from PIL import Image
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
+from torchvision.datasets import FashionMNIST
 from torchvision.transforms import v2
 
 from .config import VaeConfig
@@ -63,10 +64,18 @@ class VaeDataModule(lit.LightningDataModule):
             split="train",
         )
 
-        self._images: List[Image.Image] = [elt["image"] for elt in dataset]
-        print(f"The dataset has {len(self._images)} images")
+        self.download_train_data(dataset)
 
-    def train_dataloader(self) -> Any:
+    def download_train_data(self, dataset):
+        if self.config.data.source == "mnist":
+            self.data = FashionMNIST(
+                root=self.config.data.dir,
+                download=True,
+                transform=v2.ToTensor(),
+            )
+            return
+
+        self._images: List[Image.Image] = [elt["image"] for elt in dataset]
         transform = v2.Compose(
             [
                 v2.Resize(
@@ -82,10 +91,11 @@ class VaeDataModule(lit.LightningDataModule):
             ]
         )
 
-        data = VaeDataset(
+        self.data = VaeDataset(
             images=self._images,
             transform=transform,
             device=self.config.optim.device,
         )
 
-        return get_train_dataloader(self.config, data=data)
+    def train_dataloader(self) -> Any:
+        return get_train_dataloader(self.config, data=self.data)

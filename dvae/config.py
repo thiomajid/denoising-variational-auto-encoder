@@ -15,6 +15,7 @@ class _VaeHparams:
     stride: int
     padding: int
     n_conv_block: int
+    normalize: bool
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,7 @@ class _VaeDataConfig:
     num_workers: int
     batch_size: int
     hf_repo: str
+    source: str
 
 
 @dataclass(frozen=True)

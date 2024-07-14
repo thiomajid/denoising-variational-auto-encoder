@@ -14,7 +14,9 @@ config_store.store(name="dvae_config", node=VaeConfig)
 def main(config: VaeConfig):
     vae = DenoisingVAE(config)
     print(vae)
-    out, _, _ = vae(torch.randn((1, 3, 512, 512)))
+    out, _, _ = vae(
+        torch.randn((1, config.h_params.input_dim, config.img_height, config.img_width))
+    )
     print(out.shape)
 
     # logger = TensorBoardLogger(save_dir=config.ckpt_dir, name="dvae-v0")
