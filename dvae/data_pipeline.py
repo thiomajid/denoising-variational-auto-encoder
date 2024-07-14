@@ -64,6 +64,7 @@ class VaeDataModule(lit.LightningDataModule):
         )
 
         self._images: List[Image.Image] = [elt["image"] for elt in dataset]
+        print(f"The dataset has {len(self._images)} images")
 
     def train_dataloader(self) -> Any:
         transform = v2.Compose(
