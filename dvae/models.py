@@ -309,6 +309,7 @@ class LitDenoisingVAE(lit.LightningModule):
             reconstructed=reconstructed,
             mu=mu,
             logvar=logvar,
+            config=self.config,
         )
 
         self.log("train_loss", loss, prog_bar=True)

@@ -7,7 +7,7 @@ from datasets import load_dataset
 from PIL import Image
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
-from torchvision.datasets import FashionMNIST
+from torchvision.datasets import MNIST
 from torchvision.transforms import v2
 
 from .config import VaeConfig
@@ -53,28 +53,32 @@ class VaeDataModule(lit.LightningDataModule):
         self.hf_token = hf_token
 
     def prepare_data(self) -> None:
-        os.makedirs(self.config.data.dir, exist_ok=True)
-        data = load_dataset(self.config.data.hf_repo, token=self.hf_token)
-        data.save_to_disk(self.config.data.dir)
+        if self.config.data.source == "hf":
+            os.makedirs(self.config.data.dir, exist_ok=True)
+            data = load_dataset(self.config.data.hf_repo, token=self.hf_token)
+            data.save_to_disk(self.config.data.dir)
+        else:
+            MNIST(
+                root=self.config.data.dir,
+                download=True,
+                transform=v2.ToTensor(),
+            )
 
     def setup(self, stage: str) -> None:
-        dataset = load_dataset(
-            self.config.data.hf_repo,
-            token=self.hf_token,
-            split="train",
-        )
+        self.download_train_data()
 
-        self.download_train_data(dataset)
-
-    def download_train_data(self, dataset):
+    def download_train_data(self):
         if self.config.data.source == "mnist":
-            self.data = FashionMNIST(
+            self.data = MNIST(
                 root=self.config.data.dir,
                 download=True,
                 transform=v2.ToTensor(),
             )
             return
 
+        dataset = load_dataset(
+            self.config.data.hf_repo, token=self.hf_token, split="train"
+        )
         self._images: List[Image.Image] = [elt["image"] for elt in dataset]
         transform = v2.Compose(
             [

@@ -41,6 +41,8 @@ class _VaeOptimConfig:
     lr: float
     eta_min: float
     t_max: int
+    kl_eps: float
+    kl_beta: float
 
 
 @dataclass(frozen=True)
