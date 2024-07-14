@@ -1,8 +1,15 @@
 import hydra
+
+# import lightning as lit
 import torch
 from hydra.core.config_store import ConfigStore
 
-# import lightning as lit
+# from lightning.pytorch.callbacks import (
+#     LearningRateFinder,
+#     LearningRateMonitor,
+#     ModelCheckpoint,
+# )
+# from dvae.data_pipeline import VaeDataModule
 from dvae.config import VaeConfig
 from dvae.models import DenoisingVAE
 
@@ -19,7 +26,6 @@ def main(config: VaeConfig):
     )
     print(out.shape)
 
-    # logger = TensorBoardLogger(save_dir=config.ckpt_dir, name="dvae-v0")
     # callbacks = [
     #     LearningRateFinder(),
     #     LearningRateMonitor(logging_interval="step", log_weight_decay=True),
@@ -33,17 +39,20 @@ def main(config: VaeConfig):
     #         save_weights_only=False,
     #     ),
     # ]
+
+    # datamodule = VaeDataModule(config=config, hf_token="")
+
     # trainer = lit.Trainer(
     #     accelerator=config.accelerator,
     #     devices=config.num_device,
     #     max_epochs=config.epochs,
-    #     precision=config.precision,
-    #     logger=logger,
     #     callbacks=callbacks,
     #     enable_checkpointing=True,
     #     enable_model_summary=True,
     #     enable_progress_bar=True,
     # )
+
+    # trainer.fit(vae, train_dataloaders=datamodule.train_dataloader())
 
 
 if __name__ == "__main__":

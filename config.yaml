@@ -20,7 +20,7 @@ optim:
 data:
   dir: ./train-data/
   hf_repo: thiomajid/dvae-v0
-  num_workers: 2
+  num_workers: 0
   batch_size: 16
   source: hf
 

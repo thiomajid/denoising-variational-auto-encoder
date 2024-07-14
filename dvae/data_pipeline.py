@@ -74,7 +74,7 @@ class VaeDataModule(lit.LightningDataModule):
                 download=True,
                 transform=v2.ToTensor(),
             )
-            return
+            return self.data
 
         dataset = load_dataset(
             self.config.data.hf_repo, token=self.hf_token, split="train"
@@ -100,6 +100,7 @@ class VaeDataModule(lit.LightningDataModule):
             transform=transform,
             device=self.config.optim.device,
         )
+        return self.data
 
     def train_dataloader(self) -> Any:
-        return get_train_dataloader(self.config, data=self.data)
+        return get_train_dataloader(self.config, data=self.download_train_data())
