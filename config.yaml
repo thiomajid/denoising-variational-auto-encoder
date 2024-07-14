@@ -15,7 +15,7 @@ optim:
   eta_min: 1e-6
   t_max: 100
   kl_eps: 1e-8
-  kl_beta: 0.25
+  kl_beta: 0.95
 
 data:
   dir: ./train-data/
@@ -28,8 +28,8 @@ h_params:
   input_dim: 3
   conv_out_dim: 32
   conv_out_dim_scale: 2
-  latent_dim: 256
-  kernel_size: 16
+  latent_dim: 128
+  kernel_size: 8
   stride: 2
   padding: 1
   n_conv_block: 5
