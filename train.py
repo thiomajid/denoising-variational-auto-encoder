@@ -2,6 +2,7 @@ import hydra
 import torch
 from hydra.core.config_store import ConfigStore
 
+# import lightning as lit
 from dvae.config import VaeConfig
 from dvae.models import DenoisingVAE
 

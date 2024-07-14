@@ -37,8 +37,16 @@ class ConvBlock(nn.Module):
             stride=stride,
         )
 
+        # Xavier initialization
+        torch.nn.init.xavier_uniform_(self.conv.weight)
+        if self.conv.bias is not None:
+            torch.nn.init.zeros_(self.conv.bias)
+
+        self.norm = nn.BatchNorm2d(out_dim)
+
     def forward(self, hidden_state: torch.Tensor):
-        return self.activation(self.conv(hidden_state))
+        h = self.norm(self.conv(hidden_state))
+        return self.activation(h)
 
 
 class ConvTransposeBlock(nn.Module):
@@ -61,9 +69,16 @@ class ConvTransposeBlock(nn.Module):
             padding=padding,
             stride=stride,
         )
+        # Xavier initialization
+        torch.nn.init.xavier_uniform_(self.conv.weight)
+        if self.conv.bias is not None:
+            torch.nn.init.zeros_(self.conv.bias)
+
+        self.norm = nn.BatchNorm2d(out_dim)
 
     def forward(self, hidden_state: torch.Tensor):
-        return self.activation(self.conv(hidden_state))
+        h = self.norm(self.conv(hidden_state))
+        return self.activation(h)
 
 
 class VaeEncoder(nn.Module):
