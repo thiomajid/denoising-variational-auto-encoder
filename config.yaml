@@ -21,15 +21,15 @@ data:
   dir: ./train-data/
   hf_repo: thiomajid/dvae-v0
   num_workers: 2
-  batch_size: 24
+  batch_size: 16
   source: hf
 
 h_params:
   input_dim: 3
   conv_out_dim: 32
   conv_out_dim_scale: 2
-  latent_dim: 256
-  kernel_size: 8
+  latent_dim: 364
+  kernel_size: 16
   stride: 2
   padding: 1
   n_conv_block: 5
