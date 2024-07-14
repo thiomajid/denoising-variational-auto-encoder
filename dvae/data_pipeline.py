@@ -90,7 +90,7 @@ class VaeDataModule(lit.LightningDataModule):
                 ),
                 v2.RandomRotation(degrees=45),
                 v2.RandomHorizontalFlip(),
-                v2.ColorJitter(hue=0.3, brightness=0.45),
+                # v2.ColorJitter(hue=0.3, brightness=0.45),
                 v2.ToTensor(),
             ]
         )
