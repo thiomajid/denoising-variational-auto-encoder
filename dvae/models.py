@@ -167,7 +167,10 @@ class VaeDecoder(nn.Module):
         )
 
         self.conv_transpose_blocks = self.__init_conv_transpose_blocks()
-        self.upsample = nn.Upsample(size=(config.img_height, config.img_width))
+        self.output = nn.Sequential(
+            nn.Upsample(size=(config.img_height, config.img_width)),
+            nn.Sigmoid(),
+        )
 
     def __init_conv_transpose_blocks(self):
         out_dim_scale = self.config.h_params.conv_out_dim_scale
@@ -217,7 +220,7 @@ class VaeDecoder(nn.Module):
             h.shape[-2] != self.config.img_width
             and h.shape[-1] != self.config.img_height
         ):
-            h = self.upsample(h)
+            h = self.output(h)
 
         return h
 
