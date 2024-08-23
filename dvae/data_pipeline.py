@@ -77,8 +77,11 @@ class VaeDataModule(lit.LightningDataModule):
             return self.data
 
         dataset = load_dataset(
-            self.config.data.hf_repo, token=self.hf_token, split="train"
+            self.config.data.hf_repo,
+            token=self.hf_token,
+            split="train",
         )
+
         self._images: List[Image.Image] = [elt["image"] for elt in dataset]
         transform = v2.Compose(
             [
