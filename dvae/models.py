@@ -331,25 +331,33 @@ class LitDenoisingVAE(lit.LightningModule):
 
         loss = None
         if self.config.is_vae:
-            reconstructed, mu, logvar = self.model(img)
-            loss = loss_function(
-                sample=batch,
-                reconstructed=reconstructed,
-                mu=mu,
-                logvar=logvar,
-                config=self.config,
-            )
+            loss = self.vae_loss(batch, img)
         else:
-            out = self.model(img)
-            loss = loss_function(
-                sample=batch,
-                reconstructed=out,
-                config=self.config,
-            )
+            loss = self.auto_encoder_loss(batch, img)
 
         self.log("train_loss", loss, prog_bar=True)
 
         return loss
+
+    def auto_encoder_loss(self, batch, img):
+        reconstruction = self.model(img)
+        loss = loss_function(
+            sample=batch,
+            reconstructed=reconstruction,
+            config=self.config,
+        )
+
+        return loss
+
+    def vae_loss(self, batch, img):
+        reconstructed, mu, logvar = self.model(img)
+        return loss_function(
+            sample=batch,
+            reconstructed=reconstructed,
+            mu=mu,
+            logvar=logvar,
+            config=self.config,
+        )
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.config.optim.lr)
