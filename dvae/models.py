@@ -340,10 +340,10 @@ class LitDenoisingVAE(lit.LightningModule):
                 config=self.config,
             )
         else:
-            reconstructed = self.model(img)
+            out = self.model(img)
             loss = loss_function(
                 sample=batch,
-                reconstructed=reconstructed,
+                reconstructed=out,
                 config=self.config,
             )
 
