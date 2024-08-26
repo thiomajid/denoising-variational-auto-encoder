@@ -6,24 +6,20 @@ from .config import VaeConfig
 def loss_function(
     sample: torch.Tensor,
     reconstructed: torch.Tensor,
-    mu: torch.Tensor,
-    logvar: torch.Tensor,
     config: VaeConfig,
+    mu: torch.Tensor | None = None,
+    logvar: torch.Tensor | None = None,
 ):
-    bce_loss = torch.nn.functional.mse_loss(
+    loss_term = torch.nn.functional.mse_loss(
         reconstructed,
         sample,
     )
 
-    kl_div = -0.5 * torch.sum(
-        1 + logvar - mu.pow(2) - (logvar.exp() + config.optim.kl_eps)
-    )
+    if config.is_vae:
+        kl_div = -0.5 * torch.sum(
+            1 + logvar - mu.pow(2) - (logvar.exp() + config.optim.kl_eps)
+        )
 
-    total = bce_loss + config.optim.kl_beta * kl_div
+        loss_term = loss_term + config.optim.kl_beta * kl_div
 
-    if torch.isnan(total):
-        print(f"NaN detected - BCE: {bce_loss}, KL: {kl_div}")
-        print(f"mu range: {mu.min()} to {mu.max()}")
-        print(f"logvar range: {logvar.min()} to {logvar.max()}")
-
-    return total
+    return loss_term

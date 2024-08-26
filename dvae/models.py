@@ -27,6 +27,7 @@ class ConvBlock(nn.Module):
             kernel_size=config.h_params.kernel_size,
             padding=config.h_params.padding,
             stride=config.h_params.stride,
+            bias=self.config.h_params.conv_bias,
         )
 
         # Xavier initialization
@@ -57,6 +58,7 @@ class ConvTransposeBlock(nn.Module):
             kernel_size=config.h_params.kernel_size,
             padding=config.h_params.padding,
             stride=config.h_params.stride,
+            bias=self.config.h_params.conv_bias,
         )
         # Xavier initialization
         torch.nn.init.xavier_uniform_(self.conv.weight)
@@ -86,9 +88,16 @@ class VaeEncoder(nn.Module):
         last_conv_out_dim = compute_last_conv_out_dim(self.config)
         _, img_height, img_width = compute_conv_output_size(self.config)
 
-        self.fc = nn.Linear(
-            last_conv_out_dim * img_height * img_width,
-            last_conv_out_dim * out_dim_scale,
+        self.fc = (
+            nn.Linear(
+                last_conv_out_dim * img_height * img_width,
+                last_conv_out_dim * out_dim_scale,
+            )
+            if self.config.is_vae
+            else nn.Linear(
+                last_conv_out_dim * img_height * img_width,
+                self.config.h_params.latent_dim,
+            )
         )
 
         self.fc_mu = nn.Linear(
@@ -137,9 +146,13 @@ class VaeEncoder(nn.Module):
 
         # [batch_size, n_channels, height, width] => [batch_size, n_features]
         h = h.view(h.size(0), -1)
-        h = self.activation(self.fc(h))
-        mu = self.fc_mu(h)
-        logvar = self.fc_logvar(h)
+        h: torch.Tensor = self.activation(self.fc(h))
+
+        if not self.config.is_vae:
+            return h
+
+        mu: torch.Tensor = self.fc_mu(h)
+        logvar: torch.Tensor = self.fc_logvar(h)
 
         return mu, logvar
 
@@ -168,7 +181,11 @@ class VaeDecoder(nn.Module):
 
         self.conv_transpose_blocks = self.__init_conv_transpose_blocks()
         self.output = nn.Sequential(
-            nn.Upsample(size=(config.img_height, config.img_width)),
+            nn.Upsample(
+                size=(config.img_height, config.img_width),
+                mode="bilinear",
+                align_corners=False,
+            ),
             nn.Sigmoid(),
         )
 
@@ -233,12 +250,18 @@ class DenoisingVAE(nn.Module):
         self.encoder = VaeEncoder(config)
         self.decoder = VaeDecoder(config)
 
-    def encode(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        mu, logvar = self.encoder(x)
-        return mu, logvar
+    def auto_encoder_forward(self, x: torch.Tensor):
+        h = self.encoder(x)
+        reconstructed = self.decoder(h)
 
-    def decode(self, x: torch.Tensor) -> torch.Tensor:
-        return self.decoder(x)
+        return reconstructed
+
+    def vae_forward(self, x: torch.Tensor):
+        mu, logvar = self.encoder(x)
+        z = self.reparametrize(mu, logvar)
+        reconstructed = self.decoder(z)
+
+        return reconstructed, mu, logvar
 
     def reparametrize(self, mu: torch.Tensor, logvar: torch.Tensor):
         std = torch.exp(0.5 * logvar)
@@ -247,11 +270,10 @@ class DenoisingVAE(nn.Module):
         return mu + eps * std
 
     def forward(self, x: torch.Tensor):
-        mu, logvar = self.encode(x)
-        z = self.reparametrize(mu, logvar)
-        reconstructed = self.decode(z)
+        if self.config.is_vae:
+            return self.vae_forward(x)
 
-        return reconstructed, mu, logvar
+        return self.auto_encoder_forward(x)
 
     @torch.no_grad()
     def generate(self, num_samples: int) -> torch.Tensor:
@@ -306,14 +328,23 @@ class LitDenoisingVAE(lit.LightningModule):
             img = batch
 
         img = img.to(self.device)
-        reconstructed, mu, logvar = self.model(img)
-        loss = loss_function(
-            sample=batch,
-            reconstructed=reconstructed,
-            mu=mu,
-            logvar=logvar,
-            config=self.config,
-        )
+
+        loss = None
+        if self.config.is_vae:
+            reconstructed, mu, logvar = self.model(img)
+            loss = loss_function(
+                sample=batch,
+                reconstructed=reconstructed,
+                mu=mu,
+                logvar=logvar,
+                config=self.config,
+            )
+        else:
+            loss = loss_function(
+                sample=batch,
+                reconstructed=reconstructed,
+                config=self.config,
+            )
 
         self.log("train_loss", loss, prog_bar=True)
 

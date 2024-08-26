@@ -4,6 +4,7 @@ img_width: 512
 img_height: 512
 activation_fn: gelu
 ckpt_dir: dvae-v0-artifacts
+is_vae: false
 
 optim:
   device: cuda
@@ -33,4 +34,5 @@ h_params:
   stride: 2
   padding: 1
   n_conv_block: 5
+  conv_bias: false
   normalize: true

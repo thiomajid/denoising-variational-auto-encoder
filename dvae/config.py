@@ -15,6 +15,7 @@ class _VaeHparams:
     stride: int
     padding: int
     n_conv_block: int
+    conv_bias: bool
     normalize: bool
 
 
@@ -57,6 +58,7 @@ class VaeConfig:
     img_height: int
     activation_fn: str
     ckpt_dir: str
+    is_vae: bool
     optim: _VaeOptimConfig
     data: _VaeDataConfig
     h_params: _VaeHparams

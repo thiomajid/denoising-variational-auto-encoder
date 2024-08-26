@@ -21,9 +21,15 @@ config_store.store(name="dvae_config", node=VaeConfig)
 def main(config: VaeConfig):
     vae = DenoisingVAE(config)
     print(vae)
-    out, _, _ = vae(
-        torch.randn((1, config.h_params.input_dim, config.img_height, config.img_width))
+    out = None
+    sample = torch.randn(
+        (1, config.h_params.input_dim, config.img_height, config.img_width)
     )
+    if config.is_vae:
+        out, _, _ = vae(sample)
+    else:
+        out = vae(sample)
+
     print(out.shape)
 
     # callbacks = [
